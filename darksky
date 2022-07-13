@@ -1,20 +1,21 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
-import urllib2
+import urllib
+import requests
 import json
 import time
 import datetime
-import ConfigParser
-import argparse 
+import configparser
+import argparse
 import sys
 import os
 import math
 
 
 def writeConfig(config, conffile):
-        '''write the config file into the specified conffile'''
-        with open(conffile, 'wb') as configfile:
-                config.write(configfile)
+	"""write the config file into the specified conffile"""
+	with open(conffile, 'wt') as configfile:
+		config.write(configfile)
 
 
 ##################################################
@@ -24,8 +25,6 @@ def writeConfig(config, conffile):
 def celsius(F):
 	"""Converts the temperature in Farenheit to Celsius"""
 	return (F - 32.0) * 5.0 / 9.0
-	
-
 
 
 #######################################################
@@ -33,7 +32,7 @@ def celsius(F):
 #######################################################
 
 def txtplot(data, ylim, nyticks=2, yspacer=3, xticksat=[], xmticksat=[], pch="*"):
-	""" 
+	"""
 	Create the ascii plot on the console.
 
 	Input parameters:
@@ -44,11 +43,11 @@ def txtplot(data, ylim, nyticks=2, yspacer=3, xticksat=[], xmticksat=[], pch="*"
 	nxticks		- number of ticks in x axsis
 	xticksat	- list of location for the ticks
 	xmticksat	- list of location for the minor ticks
-	pch		- list of symbols to be shown (for intensity)
+	pch			- list of symbols to be shown (for intensity)
 	"""
 	
 	n = len(data)
-	m = nyticks + (nyticks - 1) * yspacer 
+	m = nyticks + (nyticks - 1) * yspacer
 	plotmat = [[" " for i in xrange(n)] for i in xrange(m)]
 	ymin = min(ylim)
 	ymax = max(ylim)
@@ -61,7 +60,6 @@ def txtplot(data, ylim, nyticks=2, yspacer=3, xticksat=[], xmticksat=[], pch="*"
 		j = int(round(j))
 		if (j >= 0 and j < m):
 			plotmat[j][i] = pch[i]
-
 
 	# decorate the plot
 	# horizontal lines
@@ -77,7 +75,6 @@ def txtplot(data, ylim, nyticks=2, yspacer=3, xticksat=[], xmticksat=[], pch="*"
 	for i in xmticksat:
 		if i >=0 and i < len(plotmat[0]):
 			plotmat[0][i] = "+"
-
 
 	# vertical lines with ticks
 	vline = ["|" for i in xrange(m)]
@@ -125,68 +122,68 @@ def txtplot(data, ylim, nyticks=2, yspacer=3, xticksat=[], xmticksat=[], pch="*"
 
 # initialize the parser
 parser = argparse.ArgumentParser(#usage="%(prog)s [options]",
-                                 description="Command line weather forcasts powered by Dark Sky [https://darksky.net/poweredby/].")
+	description="Command line weather forcasts powered by Dark Sky [https://darksky.net/poweredby/].")
 
 # forecast mode
-parser.add_argument("mode",type=str, 
-		    nargs="?", 
-		    default="rain",
-                    help="forecast mode [rain | rain2 | temp | now]")
+parser.add_argument("mode",type=str,
+	nargs="?",
+	default="rain",
+	help="forecast mode [rain | rain2 | temp | now]")
 
 # config file
 parser.add_argument("-f",
-		    "--file", 
-		    nargs="?",
-		    type=str,
-		    default = "~/.darksky.conf",
-                    help="config file")
+	"--file",
+	nargs="?",
+	type=str,
+	default = "~/.darksky.conf",
+	help="config file")
 
 # forcastio Api Key
 parser.add_argument("-k",
-		    "--key", 
-		    nargs="?", 
-		    type=str,
-		    help="darksky.net api secret key")
+	"--key",
+	nargs="?",
+	type=str,
+	help="darksky.net api secret key")
 
 # location key
 parser.add_argument("-l",
-		    "--location", 
-		    nargs="?", 
-		    type=str,
-		    default = "Settings",
-		    help="location defined in the config file")
+	"--location",
+	nargs="?",
+	type=str,
+	default = "Settings",
+	help="location defined in the config file")
 
 # force new download of the data file
 parser.add_argument("-d",
-		    "--download", 
-		    action = "store_true",
-		    help="force new download of the data file")
+	"--download",
+	action = "store_true",
+	help="force new download of the data file")
 
 
 # output verbosity
 parser.add_argument("-v",
-		    "--verbose",
-		    action="store_true",
-                    help="verbose output")
+	"--verbose",
+	action="store_true",
+	help="verbose output")
 
 # parse arguments into args variable.
 args = parser.parse_args()
 
 # capitalize the location
-args.location = args.location.capitalize() 
+args.location = args.location.capitalize()
 
 
 # show what has been parsed
 if args.verbose:
-	print "Verbose mode"
-	print "---------------------------------------------------------"
-	print "The following arguments were parsed from the command line"
-	print "---------------------------------------------------------"
-	print "Config file:\t", args.file
-	print "Forecast mode:\t" , args.mode
-	print "User key:\t", args.key
-	print "Location:\t", args.location
-	print
+	print("Verbose mode")
+	print("---------------------------------------------------------")
+	print("The following arguments were parsed from the command line")
+	print("---------------------------------------------------------")
+	print("Config file:\t", args.file)
+	print("Forecast mode:\t" , args.mode)
+	print("User key:\t", args.key)
+	print("Location:\t", args.location)
+	print("")
 
 
 
@@ -199,32 +196,32 @@ if args.verbose:
 #######################################################
 
 conffile = os.path.expanduser(args.file)
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 
 # Read config file
 if os.path.isfile(conffile):
 	if args.verbose:
-		print "Parsing the config file options from " + args.file
+		print("Parsing the config file options from " + args.file)
 
 	try:
 		config.read(conffile)
 	except:
-		print "Error reading config file " + conffile + "... exiting"
+		print("Error reading config file " + conffile + "... exiting")
 		sys.exit(1)
 else:
-	print "No config file " + conffile + " found. Intializing from defaults ..." 
-        print
+	print("No config file " + conffile + " found. Intializing from defaults ...")
+	print("")
 
-        defaultConfig = {
-                'jsonFile': '/tmp/darksky%s.json',
-                'plotsize': '2',
-        }
+	defaultConfig = {
+		'jsonFile': '/tmp/darksky%%s.json',
+		'plotsize': '2',
+	}
 
-        config.add_section('Settings')
-        for key, value in defaultConfig.iteritems():
-                config.set('Settings',key,'%s' % value)
+	config.add_section('Settings')
+	for key, value in defaultConfig.items():
+		config.set('Settings',key,'%s' % value)
 
-        writeConfig(config, conffile)
+	writeConfig(config, conffile)
 
 # read darksky.net secret api key
 if args.key:
@@ -232,37 +229,36 @@ if args.key:
 elif config.has_option("Settings", "apiKey"):
 	apiKey = config.get("Settings", "apiKey")
 else:
-        print "Darksky secret API key not found (from https://darksky.net/dev)."
-        print
+	print("Darksky secret API key not found (from https://darksky.net/dev).")
+	print("")
 
-        apiKey = raw_input('Please enter your apiKey, or press Enter to continue without: ')
+	apiKey = input('Please enter your apiKey, or press Enter to continue without: ')
 
-        if apiKey:
-                config.set('Settings', 'apiKey', apiKey)
-                writeConfig(config, conffile)
+	if apiKey:
+		config.set('Settings', 'apiKey', apiKey)
+		writeConfig(config, conffile)
 
-                print "provided apiKey was added to your config file " + conffile
+		print("provided apiKey was added to your config file " + conffile)
 
 
 # latitude and longitude
-if (config.has_option(args.location, "lat") & 
-    config.has_option(args.location, "lon")):
+if (config.has_option(args.location, "lat") & config.has_option(args.location, "lon")):
 	lat = config.get(args.location, "lat")
 	lon = config.get(args.location, "lon")
 else:
-        try:
-                config.add_section(args.location)
-        except:
-                pass
+	try:
+		config.add_section(args.location)
+	except:
+		pass
 
-        print "Please enter geografic coordinates for " + args.location + "."
-        lat = raw_input('Latitude:  ')
-        lon = raw_input('Longitude: ')
+	print("Please enter geografic coordinates for " + args.location + ".")
+	lat = input('Latitude:  ')
+	lon = input('Longitude: ')
 
-        config.set(args.location, 'lat', lat)
-        config.set(args.location, 'lon', lon)
+	config.set(args.location, 'lat', lat)
+	config.set(args.location, 'lon', lon)
 
-        writeConfig(config, conffile)
+	writeConfig(config, conffile)
 
 # only download new json file if existing file is older than 2 minutes
 downloadIfOlder = 120
@@ -281,13 +277,12 @@ if (config.has_option("Settings", "jsonFile")):
 	try:
 		jsonfilename = config.get("Settings", "jsonFile") % args.location
 	except TypeError:
-		print "The filename jsonFile in the [Settings] section in the config file: " + args.file +\
-		    " Must include '%s'"
-		print "Using default file"
-		jsonfilename = "/tmp/darksky"+ args.location +".json"
+		print("The filename jsonFile in the [Settings] section in the config file: " + args.file + " Must include '%s'")
+		print("Using default file")
+		jsonfilename = "/tmp/darksky" + args.location + ".json"
 		
 else:
-	jsonfilename = "/tmp/darksky"+ args.location +".json"
+	jsonfilename = "/tmp/darksky" + args.location + ".json"
 
 
 
@@ -297,35 +292,35 @@ else:
 
 
 #######################################################
-# download and open json file 
+# download and open json file
 #######################################################
 
 # if file doesn't exist or it's more than `downloadIfOlder` seconds old
 if not (os.path.isfile(jsonfilename)) \
-    or  (time.time() - os.path.getmtime(jsonfilename) > downloadIfOlder) \
-    or args.download:
+	or  (time.time() - os.path.getmtime(jsonfilename) > downloadIfOlder) \
+	or args.download:
 
 	if args.verbose:
-		print "Downloading the data."
+		print("Downloading the data.")
 
- 	url = ('https://api.darksky.net/forecast/' + apiKey
- 	       + '/' + str(lat) + ',' + str(lon))
+	url = ('https://api.darksky.net/forecast/' + apiKey
+	       + '/' + str(lat) + ',' + str(lon))
 	try:
- 		response = urllib2.urlopen(url)
+		response = urllib.request.urlopen(url)
 	except:
-                print
-		print "You might have exceeded the quota of API requests."
-                print "Try again later or register at https://darksky.net/dev and"
-                print "enter obtained apiKey when prompted."
-                print
-		print "Error: Connection failed."
+		print("")
+		print("You might have exceeded the quota of API requests.")
+		print("Try again later or register at https://darksky.net/dev and")
+		print("enter obtained apiKey when prompted.")
+		print("")
+		print("Error: Connection failed.")
 		sys.exit(1)
- 	fcstData = response.read()
+	fcstData = response.read()
 	
 	data = json.loads(fcstData)  # converts to the required format
 
- 	with open(jsonfilename, 'wb') as jsonFile:
- 		jsonFile.write(fcstData)
+	with open(jsonfilename, 'wb') as jsonFile:
+		jsonFile.write(fcstData)
 else:
 	# load the data from the file
 	with open(jsonfilename, 'r') as jsonFile:
@@ -346,8 +341,7 @@ if args.mode == "rain":
 	try:
 		mData = data["minutely"]["data"]
 	except KeyError:
-		print "The data for minutely precision are not available for this location ("\
-		    + args.location + ")."
+		print("The data for minutely precision are not available for this location (" + args.location + ").")
 		sys.exit(1)
 
 	# get precip data from json file
@@ -369,22 +363,21 @@ if args.mode == "rain":
 		fcsttime.append(d["time"])
 
 	# plot
-	plotmat = txtplot(data=precipProb, 
-			  ylim=[0,1], 
-	                  nyticks=5, 
-			  yspacer=plotsize, 
-	                  xticksat=[0, 15, 30, 45], 
-			  pch=pch)
-	
+	plotmat = txtplot(data=precipProb,
+		ylim=[0,1],
+		nyticks=5,
+		yspacer=plotsize,
+		xticksat=[0, 15, 30, 45],
+		pch=pch)
+
 	# add x axis labels
-	t0 = datetime.datetime.fromtimestamp(fcsttime[0] 
-	     + time.timezone).strftime('%H:%M')
+	t0 = datetime.datetime.fromtimestamp(fcsttime[0] + time.timezone).strftime('%H:%M')
 	plotmat.insert(0, [" " for i in xrange(len(plotmat[0]))])
 	plotmat[0][6:12] = list(t0)
 	plotmat[0][21:(21+6)] = list('+15min')
 	plotmat[0][36:(36+6)] = list('+30min')
 	plotmat[0][51:(51+6)] = list('+45min')
-	
+
 
 
 
@@ -396,11 +389,10 @@ elif args.mode=="temp":
 	try:
 		hData = data["hourly"]["data"]
 	except KeyError:
-		print "The data for hourly precision are not available for this location ("\
-		    + args.location + ")."
+		print("The data for hourly precision are not available for this location (" + args.location + ").")
 		sys.exit(1)
 
-	
+
 	temp = []
 	fcsttime = []
 	fcstday = []
@@ -431,13 +423,13 @@ elif args.mode=="temp":
 		if t == "06:00" or t == "18:00":
 			xmtixat.append(i)
 
-	
-	plotmat = txtplot(data=temp, 
-			  ylim=[ymin,ymax], 
-	                  nyticks=nytix, 
-			  yspacer=plotsize, 
-			  xmticksat = xmtixat,
-	                  xticksat=xtixat)
+
+	plotmat = txtplot(data=temp,
+			ylim=[ymin,ymax],
+			nyticks=nytix,
+			yspacer=plotsize,
+			xmticksat = xmtixat,
+			xticksat=xtixat)
 
 	plotmat.insert(0, [" " for i in xrange(len(plotmat[0])+2)])
 	for i in xrange(len(xtixat)):
@@ -452,13 +444,12 @@ elif args.mode=="temp":
 #######################################################
 # 48 hours rain forecast
 #######################################################
-	
+
 elif args.mode=="rain2":
 	try:
 		hData = data["hourly"]["data"]
 	except KeyError:
-		print "The data for hourly precision are not available for this location ("\
-		    + args.location + ")."
+		print("The data for hourly precision are not available for this location (" + args.location + ").")
 		sys.exit(1)
 
 	rain = []
@@ -481,7 +472,7 @@ elif args.mode=="rain2":
 		else:
 			pch.append("#")
 
-	# creates ticks at the specified positions -- 
+	# creates ticks at the specified positions --
 	xtixat = []
 	xmtixat = [] # minor ticks array
 	xtix = []
@@ -495,13 +486,13 @@ elif args.mode=="rain2":
 		if t == "06:00" or t == "18:00":
 			xmtixat.append(i)
 	
-	plotmat = txtplot(data=rain, 
-			  ylim=[0,1], 
-	                  nyticks=5, 
-			  yspacer=plotsize, 
-	                  xticksat=xtixat, 
-			  xmticksat = xmtixat,
-			  pch=pch)
+	plotmat = txtplot(data=rain,
+		ylim=[0,1],
+		nyticks=5,
+		yspacer=plotsize,
+		xticksat=xtixat,
+		xmticksat = xmtixat,
+		pch=pch)
 
 	plotmat.insert(0, [" " for i in xrange(len(plotmat[0])+2)])
 	for i in xrange(len(xtixat)):
@@ -522,89 +513,84 @@ elif args.mode == 'now':
 	try:
 		d = data['currently']
 	except KeyError:
-		print "The data for current conditions are not available for this location ("\
-		    + args.location + ")."
+		print("The data for current conditions are not available for this location (" + args.location + ").")
 		sys.exit(1)
 
 
-	if not 'summary' in d: 
+	if not 'summary' in d:
 		summary = ''
-	else: 
+	else:
 		summary = d['summary']
 
 
-	if not 'temperature' in d: 
+	if not 'temperature' in d:
 		temperature = ''
-	else: 
+	else:
 		temperature = str(round(celsius(d['temperature']))) + ' C'
 
 
-	if 'apparentTemperature' in d: 
+	if 'apparentTemperature' in d:
 		apptemp = round(celsius(d['apparentTemperature']), 1)
 		temperature = temperature + ' (feels like ' + str(apptemp) + ' C)'
 
 
-	if not 'precipType' in d: 
+	if not 'precipType' in d:
 		d['precipType'] = 'rain'
 
 
-	if not 'precipIntensity' in d: 
+	if not 'precipIntensity' in d:
 		d['precipIntensity'] = 0
 
 
-	if d['precipIntensity'] <= 0: 
+	if d['precipIntensity'] <= 0:
 		precip = 'none'
-	else: 
+	else:
 		precip = d['precipType'] + ' ' + str(round(d['precipIntensity'] * 25.4, 2)) + ' mm/h'
 
-	
 
 
 	# WIND
-	if not 'windSpeed' in d: 
+	if not 'windSpeed' in d:
 		windSpeed = '? km/h '
 		bft = ''
-	else: 
+	else:
 		windSpeed = str(int(d['windSpeed'] * 1.6093)) + ' km/h '
 		bft = '('+str(int((d['windSpeed'] * 1.6093 / 3.0) ** (2.0/3.0))) + ' Bft)'
 
 
-	if not 'windBearing' in d: 
+	if not 'windBearing' in d:
 		windBearing = ''
-	else: 
-		windBearing = ['N','NE','E','SE','S','SW', 
-	                     'W', 'NW', 'N'][int(d["windBearing"] / 45.0)] + ' '
+	else:
+		windBearing = ['N','NE','E','SE','S','SW', 'W', 'NW', 'N'][int(d["windBearing"] / 45.0)] + ' '
 	wind = windSpeed + windBearing + bft
 
 
 
-	if not 'humidity' in d: 
+	if not 'humidity' in d:
 		humidity = ''
-	else: 
+	else:
 		humidity = str(int(d['humidity'] * 100.0)) + ' %'
 
-	
+
 	out = [
 		('  Summary:', summary),
 		('  Temperature:', temperature),
 		('  Precipitation:', precip),
 		('  Humidity:', humidity),
 		('  Wind: ', wind)]
-	
 
 	tnow = datetime.datetime.fromtimestamp(time.time()).strftime('%H:%M')
-	print ""
-	print 'Current weather conditions at ' + tnow
-	print ""
+	print("")
+	print('Current weather conditions at ' + tnow)
+	print("")
 	out2 = [[s.ljust(max(len(i) for i in column)) for s in column] for column in zip(*out)]
-	for p in ["  ".join(row) for row in zip(*out2)]: print p
-	print ""
+	for p in ["  ".join(row) for row in zip(*out2)]: print(p)
+	print("")
 
 
 else:
-	print "unknown mode: "+args.mode+" "
+	print("unknown mode: " + args.mode + " ")
 	sys.exit(1)
-	
 
 
 
@@ -615,11 +601,11 @@ else:
 #######################################################
 
 if not args.mode == "now":
-	print ""
+	print("")
 	for i in reversed(xrange(len(plotmat))):
-		print ''.join(plotmat[i])
+		print(''.join(plotmat[i]))
 	idx = max(0, len(plotmat[1])-22)
-	print ""
+	print("")
 
 
 
