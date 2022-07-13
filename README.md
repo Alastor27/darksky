@@ -59,7 +59,7 @@ For all command line arguments, see
  
 ### Requirements ###
 
-* Python2
+* Python3
 * for a limited number of queries API key is not required for continuous use
 * a darksky.net API key (get one at [darksky.net/dev](https://darksky.net/dev))
 
